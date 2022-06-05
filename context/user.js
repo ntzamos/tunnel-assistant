@@ -26,8 +26,8 @@ const Provider = ({ children }) => {
           ...profile,
         });
 
-        setIsLoading(false);
-      }
+      }  
+      setIsLoading(false);
     };
 
     getUserProfile();
