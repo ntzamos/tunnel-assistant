@@ -1,4 +1,4 @@
-import { supabase } from "../utils/supabase";
+import { supabase } from "../../utils/supabase";
 
 const ProjectDetails = ({ project }) => {
     console.log({project})

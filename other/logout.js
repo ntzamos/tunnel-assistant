@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useUser } from "../context/user";
+// import { useUser } from "../context/user";
 
 const Logout = () => {
-    const { logout } = useUser();
+    // const { logout } = useUser();
 
 
     useEffect(() => {
-        logout();
+        // logout();
     }, []);
 
     return <p>Logging out</p>;

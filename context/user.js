@@ -7,14 +7,11 @@ const Context = createContext();
 
 const Provider = ({ children }) => {
   const [user, setUser] = useState(supabase.auth.user());
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const getUserProfile = async () => {
-      const sessionUser = supabase.auth.user();
 
-      if (sessionUser) {
+    const getUserProfile = async (sessionUser) => {
         const { data: profile } = await supabase
           .from("profile")
           .select("*")
@@ -25,44 +22,45 @@ const Provider = ({ children }) => {
           ...sessionUser,
           ...profile,
         });
-
-      }  
-      setIsLoading(false);
     };
+    const sessionUser = supabase.auth.user();
+    setUser(sessionUser);
+    if(!! sessionUser) getUserProfile(sessionUser);
 
-    getUserProfile();
+    
+    supabase.auth.onAuthStateChange(async (_event, session) => {
 
-    supabase.auth.onAuthStateChange(() => {
-      getUserProfile();
+      if(!!session) await getUserProfile(session.user);
+      else setUser(null);
     });
   }, []);
 
   useEffect(() => {
+
     axios.post("/api/set-supabase-cookie", {
       event: user ? "SIGNED_IN" : "SIGNED_OUT",
       session: supabase.auth.session(),
     });
   }, [user]);
 
-  useEffect(() => {
-    if (user) {
-      const subscription = supabase
-        .from(`profile:id=eq.${user.id}`)
-        .on("UPDATE", (payload) => {
-          setUser({ ...user, ...payload.new });
-        })
-        .subscribe();
+  // useEffect(() => {
+  //   if (user) {
+  //     const subscription = supabase
+  //       .from(`profile:id=eq.${user.id}`)
+  //       .on("UPDATE", (payload) => {
+  //         setUser({ ...user, ...payload.new });
+  //       })
+  //       .subscribe();
 
-      return () => {
-        supabase.removeSubscription(subscription);
-      };
-    }
-  }, [user]);
+  //     return () => {
+  //       supabase.removeSubscription(subscription);
+  //     };
+  //   }
+  // }, [user]);
 
-  const login = async () => {
-    await supabase.auth.signIn({
-      provider: "google",
-    });
+  const login = async (opts) => {
+    const res = await supabase.auth.signIn(opts);
+    return res;
   };
 
   const logout = async () => {
@@ -74,8 +72,7 @@ const Provider = ({ children }) => {
   const exposed = {
     user,
     login,
-    logout,
-    isLoading,
+    logout
   };
 
   return <Context.Provider value={exposed}>{children}</Context.Provider>;
